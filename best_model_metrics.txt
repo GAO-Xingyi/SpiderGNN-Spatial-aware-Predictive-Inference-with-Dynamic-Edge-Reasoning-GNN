@@ -1,0 +1,14 @@
+RSSI Metrics:
+  MSE: 0.6229
+  RMSE: 0.7893
+  R2: 0.9967
+  MAE: 0.5808
+  Correlation: 0.9984
+
+CQI Metrics:
+  MSE: 0.0515
+  RMSE: 0.2270
+  R2: 0.9949
+  MAE: 0.1390
+  Correlation: 0.9975
+
