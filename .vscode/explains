@@ -1,0 +1,89 @@
+Flask==2.3.2: Specifies the use of version 2.3.2 of Flask, a lightweight Python web framework for quickly building HTTP interfaces.
+Flask-Cors==3.0.10: Provides Cross-Origin Resource Sharing (CORS) support for Flask, allowing browser-side pages to securely access back-end APIs from different domains (or ports).
+
+Import Modules
+Flask: Creates a web application instance.
+send_from_directory: Securely return static files from a specified directory.
+abort: Returns HTTP error codes (e.g. 404) if the request is invalid.
+jsonify: Serialise Python objects into JSON responses.
+CORS: Enable cross-domain access with one line.
+os, logging: for path handling and logging.
+
+Apps and CORS
+app = Flask(__name__): instantiate a Flask app.
+CORS(app): turn on CORS for all routes, so that the browser side can call it properly via fetch.
+
+Logging Settings
+logging.basicConfig(level=logging.INFO): set the logging level to INFO, easy to print debugging and access logs.
+logger = logging.getLogger(__name__): create logger instance.
+
+Path constants
+BASE_DIR: the directory where the script is located.
+IMAGE_DIR: the subdirectory where the rendered images are stored (you need to extract renders.zip here).
+
+# def scan_images(): ......
+List directories: os.listdir gets all filenames.
+Filter prefixes: only process files starting with rendered_.
+Split naming: use split('_', 2) to segment by first and second underscore, make sure view section can contain underscores (e.g. top_front).
+Organise dictionaries: cats.setdefault(category, []).append(view) to accumulate all views corresponding to each category.
+
+# @app.route('/api/categories')
+# def list_categories()......
+Route: GET /api/categories
+Function: return a list of all available categories and their respective perspectives for the front-end to dynamically generate a list of buttons and images.
+Log: Print the available categories on the console for debugging purposes.
+
+# @app.route('/api/<category>/<view>')
+# def get_image(category, view) .......
+Dynamic routing: category and view are determined by the URL, e.g. /api/cqi/bottom.
+Validation:
+Checks if category and view are in the data returned by scan_images().
+If they are not valid or the file is missing, abort(404) returns a 404 status. The log level WARN or ERROR is logged.
+Return file: Streams images to the client via send_from_directory.
+
+
+# if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True) 
+Main entry: start the service when python app.py is run.
+host='0.0.0.0'`: listen on external NICs to make it easier to run on Docker containers or remote hosts.
+debug=True: enable debug mode, code changes will be reloaded automatically and debug page will be shown when something goes wrong.
+
+# frontend package.json
+scripts: define common commands to simplify the runtime process.
+dependencies: runtime dependencies on the core React libraries.
+devDependencies: development dependencies on Vite and its React plugins.
+
+# vite.config.js
+plugins: load React support, handle JSX automatically.
+server.proxy: proxy all /api/* requests to backend Flask in development mode (no need to set CORS manually for same-origin issues).
+
+# index.html
+<div id="root">: React app mount point.
+<script type="module">: Load the entry file using ES Module.
+
+# src/main.jsx
+Importing React and ReactDOM:
+createRoot comes from React18's new concurrent rendering API.
+Rendering: mount the <App /> component into the #root container.
+
+# src/App.jsx
+State Management
+images: An object returned by the backend in the form { category: [views…] }.
+category: The currently selected category (e.g. 'cqi').
+
+Data Fetching
+In a useEffect hook, call the endpoint /api/categories.
+Upon a successful response, initialize both the images state and set the default category.
+
+Dynamic Button Rendering
+Iterate over Object.keys(images) to generate one button per category.
+When a button is clicked, call setCategory to switch the active category view.
+
+Image Display
+For the current category, retrieve its corresponding views array from images.
+Map over views to render an <img> element for each view.
+
+Error Handling
+In the <img> element’s onError callback, replace any failed-to-load image with a gray SVG placeholder to prevent broken or empty image slots.
+
+
