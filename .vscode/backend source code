@@ -1,0 +1,42 @@
+# requirements.txt
+Flask==2.3.2
+flask-cors==3.1.1
+
+# 创建app.py(backend)
+from flask import Flask, send_from_directory, abort, jsonify
+from flask_cors import CORS
+import os
+
+# 创建 Flask 应用并启用 CORS
+app = Flask(__name__)
+CORS(app)
+
+BASE_DIR = os.path.dirname(__file__)
+IMAGE_DIR = os.path.join(BASE_DIR, 'rendered_images')
+
+# 支持的类别与视角
+VALID_CATEGORIES = ['cqi', 'rssi']
+VALID_VIEWS = ['bottom', 'model', 'top_front', 'top_side']
+
+@app.route('/api/<category>/<view>')
+def get_image(category, view):
+    # 验证参数
+    if category not in VALID_CATEGORIES or view not in VALID_VIEWS:
+        abort(404, description='Category or view not found')
+    filename = f"rendered_{category}_{view}.png"
+    # 确保文件存在后再发送
+    file_path = os.path.join(IMAGE_DIR, filename)
+    if not os.path.isfile(file_path):
+        abort(404, description='Image not found')
+    return send_from_directory(IMAGE_DIR, filename)
+
+@app.route('/api/categories')
+def list_categories():
+    return jsonify({
+        'categories': VALID_CATEGORIES,
+        'views': VALID_VIEWS
+    })
+
+if __name__ == '__main__':
+    # 监听所有地址，5000 端口
+    app.run(host='0.0.0.0', port=5000, debug=True)
