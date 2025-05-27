@@ -8,10 +8,10 @@ def train_model(model, train_loader, val_loader, num_epochs=250):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     
-    # 使用AdamW优化器
+    # Use the AdamW optimizer
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.0005, weight_decay=0.01)
     
-    # 使用OneCycleLR调度器
+    # Use the OneCycleLR scheduler
     steps_per_epoch = len(train_loader)
     scheduler = OneCycleLR(
         optimizer,
@@ -24,7 +24,7 @@ def train_model(model, train_loader, val_loader, num_epochs=250):
         anneal_strategy='cos'
     )
     
-    # 早停策略
+    # Early stop strategy
     early_stopping = EarlyStopping(patience=80, min_delta=1e-5)
     
     best_val_loss = float('inf')
@@ -32,7 +32,7 @@ def train_model(model, train_loader, val_loader, num_epochs=250):
     val_losses = []
     
     for epoch in range(num_epochs):
-        # 训练阶段
+        # Training stage
         model.train()
         train_loss = 0
         for data in train_loader:
@@ -42,7 +42,7 @@ def train_model(model, train_loader, val_loader, num_epochs=250):
             loss = custom_loss(out, data.y)
             loss.backward()
             
-            # 梯度裁剪
+            # Gradient clipping
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.8)
             
             optimizer.step()
@@ -52,7 +52,7 @@ def train_model(model, train_loader, val_loader, num_epochs=250):
         train_loss /= len(train_loader)
         train_losses.append(train_loss)
         
-        # 验证阶段
+        # Verification stage
         model.eval()
         val_loss = 0
         with torch.no_grad():
@@ -64,10 +64,10 @@ def train_model(model, train_loader, val_loader, num_epochs=250):
         val_loss /= len(val_loader)
         val_losses.append(val_loss)
         
-        # 早停检查
+        # Stop early for inspection
         early_stopping(val_loss)
         
-        # 保存最佳模型
+        # Save the best model
         if val_loss < best_val_loss:
             best_val_loss = val_loss
         

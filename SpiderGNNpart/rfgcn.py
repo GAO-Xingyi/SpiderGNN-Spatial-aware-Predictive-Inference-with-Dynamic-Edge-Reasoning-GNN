@@ -8,16 +8,16 @@ class RFGCN(torch.nn.Module):
         super(RFGCN, self).__init__()
         self.use_dynamic_graph = use_dynamic_graph
 
-        # === 动态构图模块（带输入投影） ===
+        # === Dynamic Composition Module (with input projection) ===
         self.feature_proj = torch.nn.Linear(num_features, 16)
         self.dynamic_attn = torch.nn.MultiheadAttention(embed_dim=16, num_heads=4, batch_first=True)
 
-        # 编码器层
+        # Encoder layer
         self.conv1 = GATConv(num_features, hidden_channels)
         self.conv2 = GATConv(hidden_channels, hidden_channels)
         self.conv3 = GATConv(hidden_channels, hidden_channels)
 
-        # RSSI预测分支
+        # RSSI prediction branch
         self.rssi_conv1 = GCNConv(hidden_channels, hidden_channels)
         self.rssi_conv2 = GCNConv(hidden_channels, hidden_channels//2)
         self.rssi_attention = torch.nn.Linear(hidden_channels//2, 1)
@@ -33,7 +33,7 @@ class RFGCN(torch.nn.Module):
             torch.nn.Linear(hidden_channels//4, 1)
         )
 
-        # CQI预测分支
+        # CQI prediction branch
         self.cqi_conv1 = GCNConv(hidden_channels, hidden_channels)
         self.cqi_conv2 = GCNConv(hidden_channels, hidden_channels//2)
 
@@ -109,7 +109,7 @@ class RFGCN(torch.nn.Module):
         attn_output, attn_weights = self.dynamic_attn(x_proj.unsqueeze(0), x_proj.unsqueeze(0), x_proj.unsqueeze(0))
         attn_weights = attn_weights[0]
 
-        k = 5  # top-k 注意力连接
+        k = 5  # top-k attention connection
         topk = torch.topk(attn_weights, k=k, dim=-1)
         row_idx = torch.arange(attn_weights.size(0)).unsqueeze(1).expand(-1, k).flatten()
         col_idx = topk.indices.flatten()
