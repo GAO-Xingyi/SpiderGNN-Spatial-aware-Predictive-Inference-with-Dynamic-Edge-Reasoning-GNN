@@ -1,0 +1,142 @@
+# package.json
+{
+  "name": "heatmap-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "vite": "^4.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "tailwindcss": "^3.0.0",
+    "autoprefixer": "^10.0.0",
+    "postcss": "^8.0.0"
+  }
+}
+
+# tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    './index.html',
+    './src/**/*.{js,jsx}'
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+# postcss.config.js
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  }
+};
+
+# index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heatmap Viewer</title>
+  <link rel="stylesheet" href="/src/index.css" />
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+
+# vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': 'http://localhost:5000'
+    }
+  }
+});
+
+# src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: ui-sans-serif, system-ui;
+}
+
+# src/main.jsx
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(<App />);
+
+# src/App.jsx
+import React, { useState, useEffect } from 'react';
+
+const App = () => {
+  const [category, setCategory] = useState('cqi');
+  const [views, setViews] = useState([]);
+  const [error, setError] = useState(null);
+
+  // 初始化时从后端获取支持的类别和视角
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => setViews(data.views))
+      .catch(err => setError('无法加载视角列表'));
+  }, []);
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Heatmap Viewer</h1>
+      {error && <p className="text-red-600">{error}</p>}
+      <div className="flex gap-2 mb-4">
+        {['cqi', 'rssi'].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategory(cat)}
+            className={`px-4 py-2 rounded ${category === cat ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            {cat.toUpperCase()}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {views.map(view => (
+          <div key={view}>
+            <p className="capitalize mb-1">{view.replace('_', ' ')}</p>
+            <img
+              src={`/api/${category}/${view}`}
+              alt={`${category} ${view}`}
+              className="w-full border"
+              onError={(e) => { e.target.onerror = null; e.target.src = '/fallback.png'; }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default App;
+
