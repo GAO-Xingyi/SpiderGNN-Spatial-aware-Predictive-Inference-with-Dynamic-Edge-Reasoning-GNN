@@ -84,9 +84,9 @@ def plot_predictions(y_true, y_pred):
             max_val = max(true_vals.max(), pred_vals.max())
             ax.plot([min_val, max_val], [min_val, max_val], 'r--', lw=2)
 
-            ax.set_xlabel(f'True {name}')
-            ax.set_ylabel(f'Predicted {name}')
-            ax.set_title(f'{name} Prediction Results')
+            ax.set_xlabel(f'True {name}', fontsize=19)
+            ax.set_ylabel(f'Predicted {name}', fontsize=19)
+            ax.set_title(f'{name} Prediction Results', fontsize=19)
 
             r2 = r2_score(true_vals, pred_vals)
             ax.text(0.05, 0.95, f'R² = {r2:.4f}',
@@ -110,10 +110,10 @@ def plot_prediction_histograms(y_true, y_pred):
         ax.hist(true_vals, bins=15, alpha=0.6, label=f"True {name}", color=colors[i][0], edgecolor='black')
         ax.hist(pred_vals, bins=15, alpha=0.6, label=f"Predicted {name}", color=colors[i][1], edgecolor='black')
 
-        ax.set_xlabel(f"{name} Values", fontsize=12)
-        ax.set_ylabel("Frequency", fontsize=12)
-        ax.set_title(f"Histogram of True vs. Predicted {name}", fontsize=13)
-        ax.legend(fontsize=10)
+        ax.set_xlabel(f"{name} Values", fontsize=19) #12
+        ax.set_ylabel("Frequency", fontsize=19) #12
+        ax.set_title(f"Histogram of True vs. Predicted {name}", fontsize=20) #13
+        ax.legend(fontsize=15) #10
         ax.grid(True, linestyle='--', alpha=0.4)
 
     plt.tight_layout()
